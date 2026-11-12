@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>MIAUTOMOS: Química en el campamento</title>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);--bg:#f3efe2;--card:#fffdf6;--ink:#2b2a26;--mut:#6b675b;--acc:#e8751a;--ok:#2e8b57;--bad:#c0392b;--line:#d9d2bb;--sky:#cfe8f3}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){color-scheme:dark;--bg:#16201a;--card:#1f2c24;--ink:#f1eddc;--mut:#a9b3a3;--acc:#ff9a45;--ok:#5fd08a;--bad:#ff7a6b;--line:#35463b;--sky:#1d3340}}
+:root[data-theme="dark"]{color-scheme:dark;--bg:#16201a;--card:#1f2c24;--ink:#f1eddc;--mut:#a9b3a3;--acc:#ff9a45;--ok:#5fd08a;--bad:#ff7a6b;--line:#35463b;--sky:#1d3340}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:720px;margin:0 auto;padding:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px;margin-bottom:12px}
+.scene{margin-bottom:12px;border:4px solid #1a1208;border-radius:6px;overflow:hidden;line-height:0;background:#000}.scene canvas{width:100%;display:block;image-rendering:pixelated}.logo{font:900 42px/1.1 "Courier New",monospace;letter-spacing:5px;color:var(--acc);text-shadow:3px 3px 0 #1a1208;margin:2px 0 4px}.sub{color:var(--mut);margin:0 0 10px;font-weight:600}
+h1{font-size:26px;margin:4px 0 8px}
+.hud{display:flex;justify-content:space-between;font-weight:600;margin-bottom:6px}
+.prog{height:8px;background:var(--line);border-radius:6px;overflow:hidden;margin-bottom:12px}
+.prog i{display:block;height:100%;background:var(--acc)}
+.chat{display:flex;gap:10px;align-items:flex-start}
+.av{width:76px;flex:none;line-height:0}.av canvas{width:100%;image-rendering:pixelated}
+.bub{background:var(--bg);border:1px solid var(--line);border-radius:14px;padding:10px 14px;flex:1}
+button{font:inherit;cursor:pointer;border:2px solid var(--acc);background:var(--acc);color:#1b1305;border-radius:12px;padding:10px 16px;font-weight:700;margin:6px 6px 0 0}
+button.o{background:var(--card);color:var(--ink);border-color:var(--line);display:block;width:100%;text-align:left;font-weight:500}
+button.o:hover,button.o:focus{border-color:var(--acc)}
+input{font:inherit;font-size:22px;width:100%;padding:10px;border-radius:12px;border:2px solid var(--line);background:var(--bg);color:var(--ink);margin-top:8px;letter-spacing:1px}
+.eq{font-size:22px;text-align:center;padding:10px;background:var(--bg);border-radius:12px;margin:8px 0;overflow-x:auto;white-space:nowrap}
+.bar{height:26px;background:var(--line);border-radius:14px;overflow:hidden;margin:10px 0}
+.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#ffb347,#ff5e2b)}
+.ok{color:var(--ok);font-weight:700}.bad{color:var(--bad);font-weight:700}
+.warn{font-size:14px;color:var(--mut);border-left:4px solid var(--acc);padding-left:10px;margin-top:10px}
+.mut{color:var(--mut);font-size:15px}
+</style>
+</head>
+<body>
+<main id="app"></main>
+<script>
+const L=[
+{n:"La fogata",e:"🔥",adult:true,intro:"¡Miau! Soy Mandarino. Para hacer fuego necesitas tres cosas: combustible (ramas secas o leña), oxígeno (del aire) y energía para empezar (fricción). Esto es la combustión: el combustible reacciona con el oxígeno, libera calor y luz, y produce dióxido de carbono y agua. Si falta una de las tres, el fuego se apaga.<br><br><b>Para balancear una ecuación química sigue siempre este orden:</b> 1) metales, 2) no metales, 3) hidrógeno y 4) oxígeno. Así cada átomo queda igual a los dos lados de la flecha.",
+q:[
+{t:"choice",p:"¿Qué tres cosas necesita el fuego?",o:["Leña, oxígeno y energía","Agua, sal y viento","Hielo, gas y luz"],a:0,x:"Combustible + oxígeno + energía forman el triángulo del fuego."},
+{t:"blow",p:"¡Lu ya frotó la leña! Sopla para darle más oxígeno: presiona la BARRA ESPACIADORA rápido hasta llenar la barra antes de que se acabe el tiempo.",x:"Más oxígeno hace que la combustión sea más rápida e intensa."},
+{t:"text",p:"Escribe la fórmula del oxígeno que respiramos (molécula de dos átomos).",a:"O2",x:"El oxígeno es O₂: dos átomos de oxígeno unidos."},
+{t:"text",p:"Escribe la fórmula del dióxido de carbono, el gas que sale al quemar la leña.",a:"CO2",x:"Dióxido de carbono: CO₂ (1 carbono y 2 oxígenos)."},
+{t:"bal",p:"Balancea la combustión del metano (gas de cocina). Recuerda el orden: 1) metales, 2) no metales, 3) hidrógeno, 4) oxígeno. Escribe un número por cada sustancia, separados por comas.",eq:"__ CH₄ + __ O₂ → __ CO₂ + __ H₂O",a:"1,2,1,2",x:"Orden: metales (no hay), no metales (C: 1 CO₂), hidrógeno (4 H → 2 H₂O) y por último oxígeno (2 + 2 = 4 → 2 O₂). Respuesta: 1, 2, 1, 2."}]},
+{n:"Ácidos, bases y una abeja",e:"🐝",intro:"El pH va de 0 a 14: menor que 7 es <b>ácido</b>, 7 es <b>neutro</b> y mayor que 7 es <b>base</b> (alcalino). Saberlo sirve para cocinar, limpiar y dar primeros auxilios.<br><b>Neutralización:</b> un ácido y una base reaccionan y forman una sal y agua. Ácido + base → sal + agua. Ejemplo: HCl + NaOH → NaCl + H₂O.<br><b>Nombres modernos:</b> para escribir una fórmula hay que conocer el nombre químico correcto. El nombre común es “bicarbonato de sodio” pero realmente se llama <b>hidrogenocarbonato de sodio</b>.",
+q:[
+{t:"choice",p:"¡Auch! Una abeja picó a Lu. Su veneno es ácido (pH cercano a 5) y por eso arde. ¿Qué debe hacer Lu para aliviarse?",o:["Neutralizarlo con una base suave (pH un poco mayor que 7)","Echarle más ácido, como vinagre","Dejarlo así: un ácido no se puede neutralizar"],a:0,x:"Una base suave neutraliza el ácido del veneno: ácido + base → sal + agua. Más ácido empeoraría la picadura."},
+{t:"choice",p:"Lu busca en el botiquín y encuentra un polvo blanco llamado “bicarbonato de sodio”. Disuelto en agua tiene pH 8. ¿Qué es?",o:["Un ácido","Una base débil (alcalina)","Una sustancia neutra"],a:1,x:"Con pH 8 (mayor que 7) es una base débil: neutraliza ácidos sin quemar la piel."},
+{t:"text",p:"Escribe la fórmula del bicarbonato de sodio. Pista: su nombre real es hidrogenocarbonato de sodio.",a:"NaHCO3",x:"Sodio + hidrógeno + carbonato = NaHCO₃ (hidrogenocarbonato de sodio)."},
+{t:"seq",p:"Clasifica cada sustancia según su pH. Escribe una letra por sustancia, en el mismo orden de la lista y sin espacios: A = ácido (pH menor que 7), N = neutro (pH 7), B = base (pH mayor que 7).<br>1) Vinagre, pH 3<br>2) Agua pura, pH 7<br>3) Bicarbonato de sodio en agua, pH 8<br>Ejemplo de formato: tres sustancias con pH 9, 2 y 7 se escriben BAN.",a:"ANB",x:"Vinagre (pH 3): ácido (A). Agua pura (pH 7): neutra (N). Bicarbonato de sodio (pH 8): base (B). Respuesta: ANB."},
+{t:"bal",p:"Neutralización: ácido + base → sal + agua. Balancea con el orden: 1) metales, 2) no metales, 3) hidrógeno, 4) oxígeno. Un número por sustancia, separados por comas.",eq:"__ H₂SO₄ + __ NaOH → __ Na₂SO₄ + __ H₂O",a:"1,2,1,2",x:"Primero el metal: Na₂ pide 2 NaOH. Luego el azufre (1). Hidrógeno: 2 + 2 = 4 → 2 H₂O. Respuesta: 1, 2, 1, 2."}]},
+{n:"Cocinar en el campamento",e:"🍳",intro:"Hora de cocinar. La sal de cocina nace cuando un metal (sodio, Na) se une con un no metal (cloro, Cl). El metal cede electrones y el no metal los recibe: eso es un enlace iónico. Los metales suelen brillar y conducir electricidad; los no metales, no.",
+q:[
+{t:"seq",p:"Clasifica cada elemento. Escribe una letra por elemento, en el mismo orden de la lista y sin espacios: M = metal, N = no metal.<br>1) Na  2) Cl  3) Fe  4) O<br>Ejemplo de formato: C, K, Zn, Au se escribirían NMMM.",a:"MNMN",x:"Na y Fe son metales; Cl y O son no metales."},
+{t:"choice",p:"Entre Na (metal) y Cl (no metal) se forma un enlace…",o:["Iónico","Ninguno","De magnetismo"],a:0,x:"Metal + no metal = enlace iónico."},
+{t:"text",p:"Escribe la fórmula de la sal de cocina (cloruro de sodio). Pista: sodio (Na) + cloruro (Cl).",a:"NaCl",x:"Sal de cocina: NaCl."},
+{t:"choice",p:"El NaCl, ¿qué es?",o:["Una sal","Una base","Un ácido"],a:0,x:"Viene de ácido + base, así que es una sal."},
+{t:"text",p:"Escribe la fórmula del agua para hervir la pasta.",a:"H2O",x:"Agua: H₂O."},
+{t:"bal",p:"Formación de la sal: balancea con el orden 1) metales, 2) no metales, 3) hidrógeno, 4) oxígeno. Un número por sustancia, separados por comas.",eq:"__ Na + __ Cl₂ → __ NaCl",a:"2,1,2",x:"Cl₂ tiene 2 cloros, así que necesitamos 2 NaCl y por tanto 2 Na. Respuesta: 2, 1, 2."}]},
+{n:"Hacer jabón",e:"🧼",adult:true,intro:"Lu quiere hacer jabón con grasa y soda cáustica (NaOH). La soda cáustica es una base fuerte, alcalina y corrosiva: quema la piel y los ojos. Se usa con guantes, gafas y SIEMPRE con un adulto. La reacción de grasa + base se llama saponificación y produce jabón.<br><br>Recuerda la escala de pH: ácido (menor que 7), neutro (7) y base (mayor que 7). El jabón y la soda cáustica son básicos.",
+q:[
+{t:"text",p:"Escribe la fórmula de la soda cáustica (hidróxido de sodio). Pista: recuerda que la soda cáustica es una base y las bases de este tipo (los hidróxidos) terminan en OH.",a:"NaOH",x:"Soda cáustica: NaOH."},
+{t:"choice",p:"La soda cáustica es…",o:["Base fuerte y corrosiva","Ácido débil","Sal inofensiva"],a:0,x:"Es una base fuerte: ¡nunca se toca sin protección!"},
+{t:"choice",p:"Para mezclarla con agua de forma segura:",o:["Con guantes y gafas, agregando la soda al agua despacio, con un adulto","Con las manos, rápido","Agregando agua sobre la soda de golpe"],a:0,x:"Siempre guantes, gafas, ventilación y supervisión adulta."},
+{t:"seq",p:"Clasifica cada sustancia según su pH. Escribe una letra por sustancia, en el mismo orden de la lista y sin espacios: A = ácido (pH menor que 7), N = neutro (pH 7), B = base (pH mayor que 7).<br>1) Vinagre, pH 3<br>2) Jabón terminado, pH 10<br>3) Agua destilada, pH 7<br>Ejemplo de formato: tres sustancias con pH 2, 7 y 9 se escriben ANB.",a:"ABN",x:"Vinagre (pH 3): ácido (A). Jabón (pH 10): base (B). Agua destilada (pH 7): neutra (N). Respuesta: ABN."},
+{t:"bal",p:"La soda cáustica se fabrica así. Balancea con el orden 1) metales, 2) no metales, 3) hidrógeno, 4) oxígeno. Un número por sustancia, separados por comas.",eq:"__ Ca(OH)₂ + __ Na₂CO₃ → __ CaCO₃ + __ NaOH",a:"1,1,1,2",x:"Metales: Ca (1) y Na₂ (1 Na₂CO₃ da 2 Na, así que 2 NaOH). Respuesta: 1, 1, 1, 2."}]},
+{n:"¡A hornear pan!",e:"🍞",adult:true,intro:"Último reto: hornear pan, con un adulto cerca del horno. Necesitas combustión para encender el horno de leña. La levadura es un organismo vivo (un hongo) que se come el azúcar y libera CO₂, por eso la masa crece. Si no hay polvo de hornear, la miel (ácido) más bicarbonato de sodio (base) también liberan CO₂.",
+q:[
+{t:"blow",p:"Enciende el horno de leña: sopla con la BARRA ESPACIADORA rápido hasta llenar la barra.",x:"La combustión de la leña calienta el horno."},
+{t:"choice",p:"¿Cómo hace crecer la masa la levadura?",o:["Es un ser vivo que fermenta el azúcar y libera CO₂","Es un metal que reacciona con el agua","Es una sal que se disuelve"],a:0,x:"Fermentación: azúcar → alcohol + CO₂. Las burbujas inflan la masa."},
+{t:"choice",p:"El gluten se forma cuando…",o:["Las proteínas de la harina se unen con agua y se amasan","La harina se quema","El azúcar se enfría"],a:0,x:"Amasar forma redes de gluten que atrapan el gas y dan elasticidad."},
+{t:"text",p:"Escribe la fórmula de la fructosa (azúcar de la miel). Pista (en desorden): 12 hidrógenos, 6 oxígenos, 6 carbonos.",a:"C6H12O6",x:"Fructosa: C₆H₁₂O₆."},
+{t:"text",p:"Miel (ácido) + bicarbonato de sodio (base) libera un gas que infla la masa. Escribe la fórmula de ese gas.",a:"CO2",x:"Es dióxido de carbono: CO₂. Reemplaza al polvo de hornear."},
+{t:"text",p:"Escribe la fórmula del bicarbonato de sodio. Recuerda su nombre real: hidrogenocarbonato de sodio.",a:"NaHCO3",x:"Bicarbonato (hidrogenocarbonato de sodio): NaHCO₃."},
+{t:"bal",p:"Balancea la combustión del azúcar (respiración de la levadura). Orden: carbono, hidrógeno y por último oxígeno.",eq:"__ C₆H₁₂O₆ + __ O₂ → __ CO₂ + __ H₂O",a:"1,6,6,6",x:"C: 6 CO₂. H: 12 → 6 H₂O. O: a la derecha hay 12 + 6 = 18 oxígenos; el azúcar ya aporta 6, faltan 12 → 6 O₂. Respuesta: 1, 6, 6, 6."}]}
+];
+let li=0,qi=0,lives=3,locked=false,tm=null,bv=0;
+const app=document.getElementById("app");
+const $=s=>document.querySelector(s);
+let cm="n",g;
+const MM={t:"n",n:"n",q:"c",h:"h",s:"s",w:"h"};
+const R=(x,y,w,h,c)=>{g.fillStyle=c;g.fillRect(x,y,w,h)};
+const bands=(cs,y,h)=>cs.forEach((c,i)=>R(0,y+i*h,160,h,c));
+const ground=(y,a,b)=>{R(0,y,160,90-y,a);R(0,y,160,2,b)};
+const circ=(cx,cy,r,c)=>{for(let j=-r;j<=r;j++)for(let i=-r;i<=r;i++)if(i*i+j*j<=r*r)R(cx+i,cy+j,1,1,c)};
+const pine=(x,y,n,c)=>{for(let i=0;i<n;i++)R(x-i,y+i*2,2*i+1,2,c);R(x-1,y+n*2,2,3,"#4a2c14")};
+const stars=(n,s)=>{let r=s;for(let i=0;i<n;i++){r=(r*9301+49297)%233280;const X=r%160;r=(r*9301+49297)%233280;R(X,r%50,1,1,"#fff8c8")}};
+const CAT=["..oo........oo..","..oooo....oooo..",".oooooooooooooo.",".oooooooooooooo.",".ooodoooooodooo.",".oooooooooooooo.",".oooooooooooooo.","..oooooooooooo..","..oooooooooooo..",".ooooowwwwooooo.",".ooooowwwwooooo.",".ooooowwwwooooo.",".oooooooooooooo.",".ooowwooooowwooo","..oooooooooooo..","................"];
+const CP={o:"#f08a24",d:"#c2620f",w:"#fff"};
+const LU=["....hhhhhhhh....","...hhhhhhhhhh...","..HHHHHHHHHHHH..","..bbssssssssbb..","..bssssssssssbb.","..bssssssssssbb.","...ssssssssss.b.","....ssssssss....","...rrrrrrrrrr...","..tttttttttttt..","..tttttttttttt..",".stttttttttttts.","..gggggggggggg..","..gggg....gggg..","..gggg....gggg..","..kkkk....kkkk.."];
+const LP={h:"#3f8f4a",H:"#2b6a35",b:"#6b3b1d",s:"#f2c28f",r:"#d33",t:"#d9b36a",g:"#3a5a8a",k:"#222"};
+const Q=[".###.","#...#","....#","..##.","..#..",".....","..#.."];
+const K="#222",P="#ff8fa3",Bl="#5bc0f8",M="#c0504d",PK="#f08080";
+const CF={n:[[4,5,K],[11,5,K],[7,6,P],[8,6,P]],c:[[4,5,K],[5,5,K],[11,5,K],[7,6,P],[8,6,P],[7,7,K],[8,7,K]],h:[[3,5,K],[4,4,K],[5,5,K],[10,5,K],[11,4,K],[12,5,K],[7,6,P],[8,6,P],[6,7,K],[9,7,K],[7,8,K],[8,8,K]],s:[[4,5,K],[11,5,K],[4,6,Bl],[11,6,Bl],[7,6,P],[8,6,P],[7,7,K],[8,7,K],[6,8,K],[9,8,K]]};
+const LF={n:[[5,5,K],[10,5,K],[7,6,M],[8,6,M]],c:[[5,5,K],[10,5,K],[4,4,K],[5,4,K],[6,6,M],[7,7,M],[8,6,M],[9,7,M]],h:[[4,5,K],[5,4,K],[6,5,K],[9,5,K],[10,4,K],[11,5,K],[6,6,M],[9,6,M],[7,7,M],[8,7,M],[4,6,PK],[11,6,PK]],s:[[5,5,K],[10,5,K],[5,6,Bl],[10,6,Bl],[7,6,M],[8,6,M],[6,7,M],[9,7,M]]};
+CF.u=[[4,4,K],[4,5,K],[11,4,K],[11,5,K],[7,6,P],[8,6,P],[7,7,K],[8,7,K],[7,8,K],[8,8,K]];
+CF.a=[[3,3,K],[4,4,K],[4,5,K],[12,3,K],[11,4,K],[11,5,K],[3,6,"#e53935"],[12,6,"#e53935"],[7,6,P],[8,6,P],[7,7,K],[8,7,K],[6,8,K],[9,8,K]];
+LF.u=[[5,4,K],[5,5,K],[10,4,K],[10,5,K],[7,6,M],[8,6,M],[7,7,M],[8,7,M]];
+const spr=(G,Pl,x,y,f)=>{const o=(i,j)=>G[j]&&G[j][i]&&G[j][i]!==".";G.forEach((r,j)=>{for(let i=0;i<r.length;i++)if(o(i,j))[[1,0],[-1,0],[0,1],[0,-1]].forEach(([a,b])=>{if(!o(i+a,j+b))R(x+i+a,y+j+b,1,1,"#1a1208")})});G.forEach((r,j)=>{for(let i=0;i<r.length;i++)if(o(i,j))R(x+i,y+j,1,1,Pl[r[i]])});(f||[]).forEach(([i,j,c])=>R(x+i,y+j,1,1,c))};
+const rainbow=()=>{for(let y=0;y<62;y++)for(let x=0;x<160;x++){const d=Math.hypot(x-70,y-78);if(d>=40&&d<54)R(x,y,1,1,["#e53935","#fb8c00","#fdd835","#43a047","#1e88e5","#8e24aa"][(d-40)/2.34|0])}};
+const sky=["#7ec8f0","#8fd0f4","#a2d8f6","#b6e0f8","#cde9fa","#e0f2fc"];
+const BG=[
+a=>{bands(a?["#05081c","#0a1030","#101a44","#162458","#1c2e6a","#243a7a"]:["#2a1a4a","#5a2a6a","#a03a6a","#e0603a","#f59a3a","#ffd06a"],0,10);if(a)stars(45,7);else circ(40,58,11,"#ffe27a");ground(60,"#1c3a24","#2a5a34");[12,44,100,130,150].forEach((x,i)=>pine(x,30+i%2*8,10-i%2*2,"#0f2a18"));R(76,78,14,2,"#6b3b1d");R(74,80,3,2,"#888");R(89,80,3,2,"#888");if(a){g.globalAlpha=.28;circ(83,72,18,"#ff9a3a");g.globalAlpha=1;R(80,68,6,10,"#ff6a1a");R(81,64,4,8,"#ffb43a");R(82,61,2,6,"#fff0a0")}},
+a=>{bands(sky,0,10);circ(135,14,8,"#ffe97a");R(20,14,20,4,"#fff");R(26,10,12,4,"#fff");R(80,24,24,4,"#fff");R(86,20,12,4,"#fff");if(a)rainbow();ground(60,"#4caf50","#66bb6a");for(let i=0;i<30;i++)R((i*37)%158,64+(i*11)%22,2,2,["#e53935","#ffeb3b","#fff","#ec407a"][i%4]);if(!a)[[48,36],[20,30],[100,40],[70,20],[118,28],[30,50],[88,52],[8,44]].forEach(([x,y])=>{R(x,y,8,5,"#ffd400");R(x+2,y,2,5,"#222");R(x+5,y,2,5,"#222");R(x+1,y-3,3,3,"#dff");R(x+4,y-3,3,3,"#dff")})},
+a=>{bands(sky,0,10);ground(60,"#5aa65a","#78c078");[20,60,110,140].forEach((x,i)=>pine(x,28+i%2*6,9,"#2e7d32"));R(46,66,56,4,"#8b5a2b");R(50,70,4,14,"#6b3b1d");R(94,70,4,14,"#6b3b1d");R(66,56,22,10,"#555");R(64,54,26,3,"#777");R(88,58,6,2,"#555");R(60,58,6,2,"#555");if(a){R(68,57,18,2,"#ffcc66");[[70,44],[76,40],[82,44]].forEach(([x,y])=>{R(x,y,2,6,"#fff");R(x+2,y-4,2,5,"#fff")})}},
+a=>{bands(sky,0,10);circ(25,16,7,"#ffe97a");R(0,50,160,12,"#2f7fc4");for(let i=0;i<14;i++)R((i*13)%150,52+i%3*4,6,1,"#8ccbf2");ground(62,"#6aa84f","#86c06a");R(40,68,52,4,"#8b5a2b");R(44,72,4,12,"#6b3b1d");R(84,72,4,12,"#6b3b1d");R(56,58,14,10,"#9e9e9e");R(58,58,10,2,"#222");if(a){[[30,40,5],[100,30,4],[120,50,6],[52,34,3],[75,44,4]].forEach(([x,y,r])=>{g.globalAlpha=.5;circ(x,y,r,"#bfe9ff");g.globalAlpha=1;R(x-(r>>1),y-(r>>1),1,1,"#fff")});R(74,64,8,4,"#f8bbd0");R(84,64,7,4,"#fff")}else{R(100,50,2,22,"#6b3b1d");R(94,44,14,9,"#ffd400");R(100,46,2,4,"#222");R(100,51,2,1,"#222")}},
+a=>{bands(["#ffb27a","#ffc48a","#ffd69a","#ffe3ac","#fff0c4","#fff8dc"],0,10);ground(62,"#7cb342","#8bc34a");R(78,28,6,18,"#7a4a2a");circ(80,70,24,"#b5651d");R(50,70,60,20,"#7cb342");[58,62,66].forEach(y=>R(62,y,36,1,"#8a4a14"));R(70,58,20,12,"#1a0f08");R(20,76,26,3,"#8b5a2b");if(a){R(73,64,14,6,"#ff7a1a");R(76,61,8,6,"#ffd24a");R(22,71,10,5,"#d9913a");R(34,71,10,5,"#e6a54a");R(80,22,3,3,"#ddd");R(84,17,3,3,"#eee")}else R(24,72,16,4,"#f5e6c8")}
+];
+const night=()=>{bands(["#0b1030","#101a46","#162358","#1c2d6b","#223478"],0,15);stars(14,3);for(let j=-10;j<=10;j++)for(let i=-10;i<=10;i++)if(i*i+j*j<=100&&(i-5)*(i-5)+(j+2)*(j+2)>81)R(130+i,18+j,1,1,"#ffd84a");ground(70,"#14301f","#1e4a2e");[10,45,75,100].forEach((x,i)=>pine(x,34+i%2*6,10,"#0a1f14"));for(let i=0;i<14;i++)R(26-i,58+i,2*i+1,1,"#c0392b");R(24,66,5,6,"#3b1010")};
+function mood(m){let k=MM[m];if(li==1&&m!="t"&&(k=="n"||k=="c"))k="u";return k}
+function sc(c,m){g=c.getContext("2d");const k=mood(m),t=m=="t";if(t)night();else BG[li](m=="w");if(m=="w"&&li==3){spr(LU,LP,98,72,LF.h);spr(CAT,CP,124,66,CF.a);R(114,75,38,11,"#8b5a2b");R(114,75,38,2,"#a06a35");R(114,80,38,1,"#6b3b1d");R(113,74,2,12,"#6b3b1d");R(151,74,2,12,"#6b3b1d");R(111,81,5,4,"#fdd835");[[128,63,3],[133,62,3],[138,64,3],[126,66,2],[142,68,2],[118,72,3],[148,72,2],[106,66,2],[96,64,2]].forEach(([x,y,r])=>circ(x,y,r,"#fff"));return}spr(CAT,CP,t?142:124,72,CF[k]);spr(LU,LP,t?124:142,72,LF[k]);if(k=="c")spr(Q,{"#":"#ffe14d"},147,61);if(k=="u")spr(["#","#","#","#",".","#"],{"#":"#ffe14d"},149,62)}
+function paint(){document.querySelectorAll("canvas[data-m]").forEach(c=>sc(c,c.dataset.m));document.querySelectorAll("canvas[data-c]").forEach(c=>{g=c.getContext("2d");g.clearRect(0,0,18,18);spr(CAT,CP,1,1,CF[c.dataset.c])})}
+const cat=t=>`<div class="chat"><div class="bub"><b>Mandarino:</b> ${t}</div><div class="av"><canvas width="18" height="18" data-c="${cm}"></canvas></div></div>`;
+const hud=()=>{const l=L[li];return `<div class="hud"><span>Nivel ${li+1}/${L.length}: ${l.e} ${l.n}</span><span>${"❤️".repeat(lives)}${"🖤".repeat(3-lives)}</span></div><div class="prog"><i style="width:${qi/l.q.length*100}%"></i></div>`};
+const scene=m=>{cm=mood(m);if(m=="w"&&li==3)cm="a";return `<div class="scene"><canvas width="160" height="90" data-m="${m}"></canvas></div>`};
+const adult=`<div class="warn">⚠️ Estas actividades se hacen con supervisión de un adulto responsable. El juego es solo educativo.</div>`;
+function title(){
+ app.innerHTML=`${scene("t")}<div class="card"><h1 class="logo">MIAUTOMOS</h1><p class="sub">Lu y Mandarino: Química en el campamento</p>
+ <p>Lu es una exploradora y Mandarino, un gato naranja muy sabio, le indica qué hacer. Ayúdala a usar la química en situaciones reales: fogata, picaduras, cocina, jabón y pan.</p>
+ <p class="mut"><b>Cómo se juega:</b> escribe fórmulas con el teclado, clasifica y balancea ecuaciones. Tienes 3 ❤️ por nivel; pierdes una al fallar. Si se acaban, repites el nivel. Atajos: <b>Enter</b> confirma, <b>1-3</b> elige opción, <b>Espacio</b> sopla. Al escribir fórmulas usa números normales: H2O, CO2. Respeta mayúsculas y minúsculas (NaCl).</p>
+ <button id="go">¡Empezar! (Enter)</button>${adult}</div>`;
+ $("#go").onclick=()=>{li=0;intro()};
+}
+function intro(){
+ qi=0;lives=3;locked=false;const l=L[li];
+ app.innerHTML=`${scene("n")}<div class="card">${hud()}${cat(l.intro)}${l.adult?adult:""}<button id="go">Entendido (Enter)</button></div>`;
+ $("#go").onclick=ask;
+}
+function ask(){
+ locked=false;clearInterval(tm);const q=L[li].q[qi];let b="";
+ if(q.t=="choice")b=q.o.map((o,i)=>`<button class="o" data-i="${i}">${i+1}. ${o}</button>`).join("");
+ else if(q.t=="blow")b=`<div class="bar"><i id="bar"></i></div><div class="mut" id="clock"></div><button id="blow">💨 Soplar</button>`;
+ else b=(q.eq?`<div class="eq">${q.eq}</div>`:"")+`<input id="in" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="${q.t=="bal"?"Un número por sustancia":q.t=="seq"?"Una letra por sustancia":"Tu fórmula"}"><button id="go">Responder (Enter)</button>`;
+ app.innerHTML=`${scene("q")}<div class="card">${hud()}${cat(`<span class="mut">Pregunta ${qi+1} de ${L[li].q.length}</span><br>${q.p}`)}<div style="margin-top:10px">${b}</div></div>`;
+ if(q.t=="choice")document.querySelectorAll(".o").forEach(x=>x.onclick=()=>fin(+x.dataset.i==q.a));
+ else if(q.t=="blow"){
+  bv=0;let t=8;const push=()=>{if(locked)return;bv+=7;$("#bar").style.width=Math.min(bv,100)+"%";if(bv>=100)fin(true)};
+  $("#blow").onclick=push;window.blowFn=push;
+  tm=setInterval(()=>{if(locked)return;t-=.1;bv=Math.max(0,bv-1.6);$("#bar").style.width=bv+"%";$("#clock").textContent="Tiempo: "+Math.max(t,0).toFixed(1)+" s";if(t<=0)fin(false)},100);
+ }else{
+  const i=$("#in");i.focus();
+  $("#go").onclick=()=>{const v=i.value;let ok=false;
+   if(q.t=="text")ok=v.replace(/\s/g,"").replace(/[₀-₉]/g,c=>"₀₁₂₃₄₅₆₇₈₉".indexOf(c))==q.a;
+   else if(q.t=="seq")ok=v.toUpperCase().replace(/[^A-Z]/g,"")==q.a;
+   else ok=(v.match(/\d+/g)||[]).join(",")==q.a;
+   fin(ok)};
+ }
+}
+function fin(ok){
+ if(locked)return;locked=true;clearInterval(tm);window.blowFn=null;
+ if(!ok)lives--;const q=L[li].q[qi],dead=lives<=0;
+ app.innerHTML=`${scene(ok?"h":"s")}<div class="card">${hud()}<p class="${ok?"ok":"bad"}">${ok?"✅ ¡Correcto!":"❌ No era esa."}</p>${cat(q.x)}<button id="go">${dead?"Ver resultado":"Continuar"} (Enter)</button></div>`;
+ $("#go").onclick=()=>{if(dead)return lose();qi++;qi>=L[li].q.length?win():ask()};
+}
+function lose(){
+ app.innerHTML=`${scene("s")}<div class="card"><h1>Te quedaste sin vidas</h1>${cat("¡Ánimo, Lu! Repasemos la explicación y volvamos a intentarlo. Equivocarse también enseña.")}<button id="go">Repetir nivel (Enter)</button></div>`;
+ $("#go").onclick=intro;
+}
+function win(){
+ lives=3;const last=li==L.length-1;
+ app.innerHTML=`${scene("w")}<div class="card"><h1>${last?"¡Campamento completado!":"¡Nivel superado!"}</h1>${cat(last?"¡Miau! ¡Lo lograste, Lu! Esto es lo que aprendimos en el campamento:<br>🔥 <b>Combustión:</b> el fuego necesita combustible, oxígeno y energía, y produce CO₂ y agua.<br>🐝 <b>Ácidos y bases:</b> el pH va de 0 a 14. Un ácido y una base se neutralizan y forman sal y agua; por eso el bicarbonato (hidrogenocarbonato de sodio) alivia una picadura.<br>🍳 <b>Sales y enlaces:</b> un metal y un no metal forman un enlace iónico, como el sodio y el cloro en la sal de cocina (NaCl).<br>🧼 <b>Bases fuertes:</b> la soda cáustica (NaOH) sirve para hacer jabón, pero exige guantes, gafas y un adulto.<br>🍞 <b>Fermentación:</b> la levadura, y la reacción de miel con bicarbonato, liberan CO₂, y eso hace crecer el pan.<br>⚖️ <b>Balancear:</b> siempre en orden: metales, no metales, hidrógeno y oxígeno.<br><br>La química no está solo en el salón de clases: está en la fogata, la cocina, el jabón y el pan. Mira a tu alrededor, ¡está en todas partes! Recuerda hacer estos experimentos siempre con un adulto.":"¡Bien hecho! Tus vidas se renovaron: ❤️❤️❤️. Vamos al siguiente reto.")}<button id="go">${last?"Jugar de nuevo":"Siguiente nivel"} (Enter)</button></div>`;
+ $("#go").onclick=()=>{if(last)title();else{li++;intro()}};
+}
+document.addEventListener("keydown",e=>{
+ if(e.code=="Space"&&window.blowFn){e.preventDefault();window.blowFn();return}
+ if(e.key=="Enter"){const g=$("#go");if(g){e.preventDefault();g.click()}return}
+ if(/^[1-4]$/.test(e.key)&&document.activeElement.tagName!="INPUT"){const o=document.querySelectorAll(".o")[+e.key-1];if(o)o.click()}
+});
+new MutationObserver(paint).observe(app,{childList:true});
+title();
+</script>
+</body>
+</html>
